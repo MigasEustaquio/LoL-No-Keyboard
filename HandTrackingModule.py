@@ -21,10 +21,8 @@ class handDetector():
 
 
     def findHands(self, img, draw = True):
-
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.hands.process(imgRGB)
-        # print(results.multi_hand_landmarks)
 
         if self.results.multi_hand_landmarks:
             for handLms in self.results.multi_hand_landmarks:
@@ -38,32 +36,27 @@ class handDetector():
 
         xList = []
         yList = []
-        bbox = []
         self.lmList = []
 
         if self.results.multi_hand_landmarks:
             myHand = self.results.multi_hand_landmarks[handNo]
 
             for id, lm in enumerate(myHand.landmark):
-                # print(id, lm)
                 h, w, c = img.shape
                 cx, cy = int(lm.x*w), int(lm.y*h)
                 xList.append(cx)
                 yList.append(cy)
-                # print(id, cx, cy)
                 self.lmList.append([id, cx, cy])
                 if draw:
-                    # if id == 8: #Ponta do dedo indicador
                     cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
 
             xmin, xmax = min(xList), max(xList)
             ymin, ymax = min(yList), max(yList)
-            bbox = xmin, ymin, xmax, ymax
 
             if draw:
                 cv2.rectangle(img, (xmin-20, ymin-20), (xmax+20, ymax+20), (0, 255, 0), 2)
 
-        return self.lmList, bbox
+        return self.lmList
 
 
     def fingersUp(self):
@@ -80,8 +73,6 @@ class handDetector():
                 fingers.append(1)
             else:
                 fingers.append(0)
-
-            # totalFingers = fingers.count(1)
 
         return fingers
 
@@ -101,28 +92,29 @@ class handDetector():
         return length, img, [x1, y1, x2, y2, cx, cy]
 
 
-    def defineButtons(self, img, LANDMARK_GROUPS):
+    def defineTouches(self, img, LANDMARK_GROUPS):
 
         lengthList = []
 
         for lm_gp in LANDMARK_GROUPS:
-            # print(lm_gp)
             length, img, _ = self.findDistance(lm_gp[0], lm_gp[1], img, draw=False, drawC=False)
             lengthList.append(length)
-
         return img, lengthList
 
 
-    def pressKey(self, img, lmList, lengthList, KEYS, LANDMARK_GROUPS, fingersUp):
+    def pressKey(self, img, lmList, lengthList, KEYS, LANDMARK_GROUPS, fingersDown):
 
-        if fingersUp:
+        if fingersDown:
+            cv2.circle(img, (lmList[LANDMARK_GROUPS[0][1]][1], lmList[LANDMARK_GROUPS[0][1]][2]), 15, (0, 255, 0), cv2.FILLED)
+            press('f')
+            cv2.putText(img, "F", (10, 400), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 255), 3)
+        else:
             for id, key in enumerate(KEYS):
                 if lengthList[id] < 30:
                     cv2.circle(img, (lmList[LANDMARK_GROUPS[id][0]][1], lmList[LANDMARK_GROUPS[id][1]][2]), 15, (0, 255, 0), cv2.FILLED)
                     cv2.circle(img, (lmList[LANDMARK_GROUPS[id][0]][1], lmList[LANDMARK_GROUPS[id][1]][2]), 15, (0, 255, 0), cv2.FILLED)
                     press(key)
-        else:
-            press('f')
+                    cv2.putText(img, key.capitalize() , (10, 400), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 255), 3)
 
 
 def main():
@@ -135,8 +127,6 @@ def main():
         success, img = cap.read()
         img = detector.findHands(img)
         lmList = detector.findPosition(img)
-        # if len(lmList) != 0:
-        #     print(lmList[8])
 
         cTime = time.time()
         fps = 1 / (cTime-pTime)
