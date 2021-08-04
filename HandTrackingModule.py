@@ -3,6 +3,7 @@ import mediapipe as mp
 import time
 import math
 import numpy as np
+from pyKey import pressKey, releaseKey, press, sendSequence, showKeys
 
 
 class handDetector():
@@ -84,7 +85,7 @@ class handDetector():
 
         return fingers
 
-    def findDistance(self, p1, p2, img, draw=True,drawC=True ,r=15, t=3):
+    def findDistance(self, p1, p2, img, draw=True, drawC=True ,r=15, t=3):
         x1, y1 = self.lmList[p1][1:]
         x2, y2 = self.lmList[p2][1:]
         cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
@@ -98,6 +99,31 @@ class handDetector():
         length = math.hypot(x2 - x1, y2 - y1)
 
         return length, img, [x1, y1, x2, y2, cx, cy]
+
+
+    def defineButtons(self, img, LANDMARK_GROUPS):
+
+        lengthList = []
+
+        for lm_gp in LANDMARK_GROUPS:
+            # print(lm_gp)
+            length, img, _ = self.findDistance(lm_gp[0], lm_gp[1], img, draw=False, drawC=False)
+            lengthList.append(length)
+
+        return img, lengthList
+
+
+    def pressKey(self, img, lmList, lengthList, KEYS, LANDMARK_GROUPS, fingersUp):
+
+        if fingersUp:
+            for id, key in enumerate(KEYS):
+                if lengthList[id] < 30:
+                    cv2.circle(img, (lmList[LANDMARK_GROUPS[id][0]][1], lmList[LANDMARK_GROUPS[id][1]][2]), 15, (0, 255, 0), cv2.FILLED)
+                    cv2.circle(img, (lmList[LANDMARK_GROUPS[id][0]][1], lmList[LANDMARK_GROUPS[id][1]][2]), 15, (0, 255, 0), cv2.FILLED)
+                    press(key)
+        else:
+            press('f')
+
 
 def main():
 
