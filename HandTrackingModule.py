@@ -2,9 +2,7 @@ import cv2
 import mediapipe as mp
 import time
 import math
-import numpy as np
-from pyKey import pressKey, releaseKey, press, sendSequence, showKeys
-
+from pyKey import press
 
 class handDetector():
     def __init__(self, mode = False, maxHands = 2, detectionCon = 0.7, trackCon = 0.6):
@@ -40,7 +38,6 @@ class handDetector():
 
         if self.results.multi_hand_landmarks:
             myHand = self.results.multi_hand_landmarks[handNo]
-
             for id, lm in enumerate(myHand.landmark):
                 h, w, c = img.shape
                 cx, cy = int(lm.x*w), int(lm.y*h)
@@ -49,10 +46,8 @@ class handDetector():
                 self.lmList.append([id, cx, cy])
                 if draw:
                     cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
-
             xmin, xmax = min(xList), max(xList)
             ymin, ymax = min(yList), max(yList)
-
             if draw:
                 cv2.rectangle(img, (xmin-20, ymin-20), (xmax+20, ymax+20), (0, 255, 0), 2)
 
@@ -93,9 +88,7 @@ class handDetector():
 
 
     def defineTouches(self, img, LANDMARK_GROUPS):
-
         lengthList = []
-
         for lm_gp in LANDMARK_GROUPS:
             length, img, _ = self.findDistance(lm_gp[0], lm_gp[1], img, draw=False, drawC=False)
             lengthList.append(length)
@@ -117,32 +110,3 @@ class handDetector():
                     cv2.putText(img, key.capitalize() , (10, 400), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 255), 3)
 
         return img
-
-    # def resetConfig(self, img, resetCounter):
-    #     if resetCounter >= 100:
-    #         print('RESET')
-    #     return img, 0
-
-def main():
-
-    pTime = 0
-    cTime = 0
-    cap = cv2.VideoCapture(0)
-    detector = handDetector()
-    while True:
-        success, img = cap.read()
-        img = detector.findHands(img)
-        lmList = detector.findPosition(img)
-
-        cTime = time.time()
-        fps = 1 / (cTime-pTime)
-        pTime = cTime
-
-        cv2.putText(img, str(int(fps)), (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
-
-        cv2.imshow("Image", img)
-        cv2.waitKey(1)
-
-
-if __name__ == "__main__":
-    main()
