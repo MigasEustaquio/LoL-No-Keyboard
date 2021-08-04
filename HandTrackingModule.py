@@ -116,6 +116,12 @@ class handDetector():
                     press(key)
                     cv2.putText(img, key.capitalize() , (10, 400), cv2.FONT_HERSHEY_PLAIN, 4, (0, 0, 255), 3)
 
+        return img
+
+    # def resetConfig(self, img, resetCounter):
+    #     if resetCounter >= 100:
+    #         print('RESET')
+    #     return img, 0
 
 def main():
 
